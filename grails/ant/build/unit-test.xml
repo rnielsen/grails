@@ -114,32 +114,31 @@
 
             <test todir="${grails.test.reports}" name="org.codehaus.groovy.grails.reload.TransactionalServiceReloadTests" fork="true" if="test.isolated" />
 
-            <batchtest todir="${grails.test.reports}">
+            <batchtest todir="${grails.test.reports}" failureproperty="grails.test.failure" fork="true" if="test.isolated">
                   <fileset dir="${grails.test.build}">
-                    <include name="org.codehaus.groovy.grails.cli.PackagePluginTests" />
+                    <include name="**/cli/PackagePluginTests.class" />
                   </fileset>
             </batchtest>
-            <batchtest todir="${grails.test.reports}">
+            <batchtest todir="${grails.test.reports}" failureproperty="grails.test.failure" fork="true" if="test.isolated">
                   <fileset dir="${grails.test.build}">
-                    <include name="org.codehaus.groovy.grails.cli.InstallTemplatesTests" />
-                  </fileset>
-            </batchtest>
-
-            <batchtest todir="${grails.test.reports}">
-                  <fileset dir="${grails.test.build}">
-                    <include name="org.codehaus.groovy.grails.cli.GenerateAllTests" />
+                    <include name="**/cli/InstallTemplatesTests.class" />
                   </fileset>
             </batchtest>
 
-            <batchtest todir="${grails.test.reports}">
+            <batchtest todir="${grails.test.reports}" failureproperty="grails.test.failure" fork="true" if="test.isolated" >
                   <fileset dir="${grails.test.build}">
-                    <include name="org.codehaus.groovy.grails.cli.**Tests" />
-                     <exclude name="**GenerateAllTests" />
-                      <exclude name="**PackagePluginTests" />
-                      <exclude name="**InstallTemplatesTests" />
+                    <include name="**/cli/GenerateAllTests.class" />
                   </fileset>
             </batchtest>
 
+            <batchtest todir="${grails.test.reports}" failureproperty="grails.test.failure" fork="true" >
+                  <fileset dir="${grails.test.build}">
+                    <include name="**/cli/${test}Tests.class" />
+                     <exclude name="**GenerateAllTests.class" />
+                      <exclude name="**PackagePluginTests.class" />
+                      <exclude name="**InstallTemplatesTests.class" />
+                  </fileset>
+            </batchtest>
 
             <batchtest todir="${grails.test.reports}" failureproperty="grails.test.failure" fork="true" >
 			    <fileset dir="${grails.test.build}">
@@ -154,14 +153,14 @@
 
             <batchtest todir="${grails.test.reports}" failureproperty="grails.test.failure" fork="true" >
 			    <fileset dir="${grails.test.build}">
-                    <include name="**/webflow/**${test}Tests.class" />                    
+                    <include name="**/webflow/**${test}Tests.class" />
                     <exclude name="**/Abstract*" />
 				</fileset>
             </batchtest>
 
             <batchtest todir="${grails.test.reports}" failureproperty="grails.test.failure" fork="true" >
 			    <fileset dir="${grails.test.build}">
-                    <include name="**/web/taglib/**${test}Tests.class" />                    
+                    <include name="**/web/taglib/**${test}Tests.class" />
                     <exclude name="**/Abstract*" />
 				</fileset>
             </batchtest>
