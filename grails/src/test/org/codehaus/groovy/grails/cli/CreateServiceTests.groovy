@@ -41,6 +41,6 @@ class CreateServiceTests extends AbstractCliTests {
         // Now check that the associated test has also been created.
         def testFile = new File("${appDir}/test/unit/${pkgPath}${className}ServiceTests.groovy")
         assert testFile.exists()
-        assert testFile.text =~ "^${pkg ? 'package ' + pkg : ''}\\s*class ${className}ServiceTests extends GroovyTestCase \\{"
+        assert testFile.text =~ "^${pkg ? 'package ' + pkg : ''}\\s*import grails.test.*\\s*class ${className}ServiceTests extends GrailsUnitTestCase \\{", testFile.text        
     }
 }

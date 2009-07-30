@@ -63,7 +63,7 @@ class Person {
         // Check that the controller has been created.
         def controllerFile = new File("${appDir}/grails-app/controllers/${pkgPath}${className}Controller.groovy")
         assert controllerFile.exists()
-        assert controllerFile.text =~ "^${pkg ? 'package ' + pkg : ''}\\s*class ${className}Controller \\{"
+        assert controllerFile.text =~ "^\\s*${pkg ? 'package ' + pkg : ''}\\s*class ${className}Controller \\{", controllerFile.text
 
         // Now check that the associated views have also been created.
         def viewDir = "${appDir}/grails-app/views/${GrailsClassUtils.getPropertyName(className)}/"
