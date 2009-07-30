@@ -93,7 +93,7 @@ abstract class AbstractCliTests extends GroovyTestCase {
         // Configure the build settings directly rather than using
         // system properties and the BuildSettings.groovy file. Note that
         // the order here is important for things to work!
-        def settings = new BuildSettings(".")
+        def settings = new BuildSettings(new File("."))
         settings.rootLoader = new GrailsRootLoader([] as URL[], getClass().classLoader)
         settings.loadConfig()
         settings.grailsWorkDir = new File(workDir)
