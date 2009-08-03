@@ -19,11 +19,14 @@ package org.codehaus.groovy.grails.cli;
 import gant.Gant;
 import grails.util.BuildSettings;
 import grails.util.BuildSettingsHolder;
-import grails.util.GrailsNameUtils;
 import grails.util.Environment;
+import grails.util.GrailsNameUtils;
 import groovy.lang.Binding;
 import groovy.lang.Closure;
 import groovy.lang.ExpandoMetaClass;
+import jline.ConsoleReader;
+import jline.ArgumentCompletor;
+import jline.SimpleCompletor;
 import org.codehaus.gant.GantBinding;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 
@@ -297,10 +300,11 @@ public class GrailsScriptRunner {
 
         int messageNumber = 0;
         ScriptAndArgs script = new ScriptAndArgs();
+        ConsoleReader consoleReader = setUpConsoleReader();
         while (true) {
             out.println("--------------------------------------------------------");
             String commandProperty = System.getProperty("grails.script.name" + (messageNumber++));
-            String enteredName = commandProperty != null ? commandProperty : userInput(message);
+            String enteredName = commandProperty != null ? commandProperty : readLineFromConsole(message, consoleReader);
 
             if (enteredName != null && enteredName.trim().length() > 0) {
                 // restore initial system properties
@@ -325,6 +329,35 @@ public class GrailsScriptRunner {
             long end = System.currentTimeMillis();
             out.println("--------------------------------------------------------");
             out.println("Command [" + script.name + " completed in " + (end - now) + "ms with exit code " + exitCode);
+        }
+    }
+
+    private String readLineFromConsole(String message, ConsoleReader consoleReader) {
+        String result;
+        try {
+            result = consoleReader.readLine(message);
+        }
+        catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return result;
+    }
+
+    private ConsoleReader setUpConsoleReader() {
+        try {
+            ConsoleReader consoleReader = new ConsoleReader();
+            List list = isGrailsProject() ? getAvailableScripts(settings) : scriptsAllowedOutsideOfProject;
+            Collections.sort(list);
+
+            String[] scriptNames = new String[list.size()];
+            for(int i=0; i<scriptNames.length; i++) {
+                scriptNames[i] = GrailsNameUtils.getScriptName(((File)list.get(i)).getName());
+            }
+            consoleReader.addCompletor(new ArgumentCompletor(new SimpleCompletor(scriptNames)));
+            return consoleReader;
+        }
+        catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -827,18 +860,6 @@ public class GrailsScriptRunner {
                     " class loader - make sure that it is loaded by Groovy's" +
                     " RootLoader or a sub-class.");
         }
-    }
-
-    /**
-     * Replacement for AntBuilder.input() to eliminate dependency of
-     * GrailsScriptRunner on the Ant libraries. Prints a message and
-     * returns whatever the user enters (once they press &lt;return&gt;).
-     * @param message The message/question to display.
-     * @return The line of text entered by the user. May be a blank
-     * string.
-     */
-    private String userInput(String message) {
-        return userInput(message, null);
     }
 
     /**
