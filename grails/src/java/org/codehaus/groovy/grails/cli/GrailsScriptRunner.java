@@ -162,7 +162,7 @@ public class GrailsScriptRunner {
         Pattern sysPropPattern = Pattern.compile("-D(.+?)=(.+?)\\s+?");
         Matcher m = sysPropPattern.matcher(allArgs);
         while (m.find()) {
-            System.setProperty(m.group(1).trim(), m.group(2).trim());
+            System.setProperty(m.group(1).trim(), m.group(2).trim().replaceAll("%20", " "));
             lastMatch = m.group();
         }
 
@@ -284,7 +284,7 @@ public class GrailsScriptRunner {
      * Runs Grails in interactive mode.
      */
     private void runInteractive() {
-        String message = "Interactive mode ready, type your command name in to continue (hit ENTER to run the last command):\n";
+        String message = "Interactive mode ready, type your command name in to continue (hit ENTER to run the last command or 'exit' to quit):\n";
         //disable exiting
 //        System.metaClass.static.exit = {int code ->}
         System.setProperty("grails.interactive.mode", "true");
@@ -292,9 +292,13 @@ public class GrailsScriptRunner {
         ScriptAndArgs script = new ScriptAndArgs();
         while (true) {
             out.println("--------------------------------------------------------");
-            String enteredName = userInput(message);
+            String commandProperty = System.getProperty("grails.script.name" + (messageNumber++));
+            String enteredName = commandProperty != null ? commandProperty : userInput(message);
 
             if (enteredName != null && enteredName.trim().length() > 0) {
+                if (enteredName.equals("exit")) {
+                    break;
+                }
                 script = processArgumentsAndReturnScriptName(enteredName);
             }
 
