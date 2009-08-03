@@ -12,11 +12,10 @@
 		test-interactive-quits-with-exit, 
 		test-help-works-in-interactive-mode,
 		test-commands-can-have-different-parameters,
-		test-different-scripts-can-be-called"/>
-		<!-- TODO Get these tests passing -->
-		<!-- test-system-properties-and-environments-can-be-specified, -->
-		<!-- test-default-environments-are-used-for-special-scripts, -->
-		<!-- test-environment-can-be-specified-when-starting-interactive-and-can-be-overridden"/> -->
+		test-different-scripts-can-be-called,
+		test-system-properties-and-environments-can-be-specified,
+		test-default-environments-are-used-for-special-scripts,
+		test-environment-can-be-specified-when-starting-interactive-and-can-be-overridden"/>
 
     <target name="init-app">
 	    <property name="project.dir" value="target/scripts/test-interactive"/>
