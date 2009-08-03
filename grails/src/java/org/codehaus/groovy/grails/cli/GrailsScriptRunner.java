@@ -125,13 +125,12 @@ public class GrailsScriptRunner {
 
         String[] splitArgs = processSystemArguments(allArgs).trim().split(" ");
         int currentParamIndex = 0;
-        if(Environment.isSystemSet()) {
-            info.env = Environment.getCurrent().getName();
-        }
-        else if (isEnvironmentArgs(splitArgs[currentParamIndex])) {
+        if (isEnvironmentArgs(splitArgs[currentParamIndex])) {
             // use first argument as environment name and step further
             String env = splitArgs[currentParamIndex++];
             info.env = (String) ENV_ARGS.get(env);
+        } else if(Environment.isSystemSet()) {
+            info.env = Environment.getCurrent().getName();
         }
 
         if (currentParamIndex >= splitArgs.length) {
@@ -222,7 +221,7 @@ public class GrailsScriptRunner {
 
         System.setProperty("base.dir", settings.getBaseDir().getPath());
         System.setProperty(Environment.KEY, env);
-        System.setProperty(Environment.DEFAULT, "true");
+        System.setProperty(Environment.DEFAULT, useDefaultEnv ? "true" : "");
 
         if (args != null) {
             // Check whether we are running in non-interactive mode
@@ -288,6 +287,14 @@ public class GrailsScriptRunner {
         //disable exiting
 //        System.metaClass.static.exit = {int code ->}
         System.setProperty("grails.interactive.mode", "true");
+        if (System.getProperty(Environment.DEFAULT).equals("true")) {
+            System.clearProperty(Environment.KEY);
+            System.clearProperty(Environment.DEFAULT);
+        }
+        // save initial system properties
+        Properties originalProperties = new Properties();
+        originalProperties.putAll(System.getProperties());
+
         int messageNumber = 0;
         ScriptAndArgs script = new ScriptAndArgs();
         while (true) {
@@ -296,9 +303,15 @@ public class GrailsScriptRunner {
             String enteredName = commandProperty != null ? commandProperty : userInput(message);
 
             if (enteredName != null && enteredName.trim().length() > 0) {
+                // restore initial system properties
+                Properties revertProperties = new Properties();
+                revertProperties.putAll(originalProperties);
+                System.setProperties(revertProperties);
+
                 if (enteredName.equals("exit")) {
                     break;
                 }
+
                 script = processArgumentsAndReturnScriptName(enteredName);
             }
 
@@ -367,7 +380,7 @@ public class GrailsScriptRunner {
                     scriptsAllowedOutsideOfProject.add(scriptPath);
                     scriptFileName = scriptFileName.substring(0, scriptFileName.length()-1);
                 }
-                
+
                 if (scriptFileName.equals(scriptName)) potentialScripts.add(scriptPath);
             }
 
@@ -422,7 +435,7 @@ public class GrailsScriptRunner {
                             "cannot continue in non-interactive mode.");
                     return 1;
                 }
-                
+
                 out.println("Multiple options please select:");
                 String[] validArgs = new String[potentialScripts.size()];
                 for (int i = 0; i < validArgs.length; i++) {
