@@ -3,28 +3,49 @@
     <macrodef name="grails">
         <attribute name="command" description="the command line to execute"/>
         <attribute name="args" default="" description="the arguments to pass to the command"/>
+        <attribute name="interactiveCommands" default="" description="the | separated commands to pass to the interactive command"/>
         <attribute name="environment" default="" description="The environment to use for the command."/>
         <attribute name="projectName" default=""/>
         <attribute name="resultID" default="0"/>
     	<attribute name="dir" default="${checkoutDir}/@{projectName}"/>
     	<attribute name="failonerror" default="false"/>
         <attribute name="serverPort" default="${default.port}"/>
+        <attribute name="expectedOutputRegex" default=""/>
         <sequential>
 
             <echo message="Executing: grails @{command} @{args}"/>
-            <exec executable="${grailsCmd.absolute}" dir="@{dir}" resultproperty="testResult_@{resultID}" failonerror="@{failonerror}">
-                <arg value="-Dfile.encoding=utf-8"/>
-                <arg value="-Dserver.port=@{serverPort}"/>
-                <arg value="-Djava.util.logging.manager=java.util.logging.LogManager"/>
-                <arg value="-Dgrails.work.dir=${basedir}/work-global"/>
-                <arg value="-Dgrails.project.work.dir=work"/>
-                <arg value="-Dgrails.project.plugins.dir=plugins"/>
-                <arg value="@{environment}"/>
-                <arg value="@{command}"/>
-                <arg value="--non-interactive"/>
-                <arg line="@{args}"/>
-                <env key="GRAILS_HOME" path="${grails.home}"/>
-            </exec>
+            <groovy><![CDATA[
+	             import java.util.regex.*
+              ant.exec(executable:"${properties["grailsCmd.absolute"]}",dir:"@{dir}",resultproperty:"testResult_@{resultID}",outputproperty:"testOutput_@{resultId}",failonerror:"@{failonerror}") {
+                arg(value:"-Dfile.encoding=utf-8")
+                arg(value:"-Dserver.port=@{serverPort}")
+                arg(value:"-Djava.util.logging.manager=java.util.logging.LogManager")
+                arg(value:"-Dgrails.work.dir=${properties["basedir"]}/work-global")
+                arg(value:"-Dgrails.project.work.dir=work")
+                arg(value:"-Dgrails.project.plugins.dir=plugins")
+                if ("@{interactiveCommands}") {
+					"@{interactiveCommands}".split(/\|/).eachWithIndex { cmd, i ->
+						arg(value:"-Dgrails.script.name${i}=${cmd.replaceAll(' ', "%20")}")
+					}
+				}
+				if ("@{environment}") {
+                    arg(value:"@{environment}")
+                }
+                arg(value:"@{command}")
+                arg(line:"@{args}")
+                if (!"@{command}".endsWith("interactive")) {
+                	arg(value:"--non-interactive")
+				}
+                env(key:"GRAILS_HOME",path:"${properties["grails.home"]}")
+			  }
+			  def result = properties["testOutput_@{resultId}"]
+			  if ("@{expectedOutputRegex}") {
+			    Matcher m = Pattern.compile("@{expectedOutputRegex}", Pattern.DOTALL).matcher(result)
+			    assert m.find(), "Can't find '@{expectedOutputRegex}' in results:\n ${result}"
+			  } else {
+				println result
+			  }
+        	 ]]></groovy>
         </sequential>
     </macrodef>
 

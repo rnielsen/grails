@@ -1,0 +1,58 @@
+<project default="test-interactive">
+
+    <path id="classpath">
+        <fileset dir="lib" includes="*.jar"/>
+    </path>
+
+    <taskdef name="groovy" classname="org.codehaus.groovy.ant.Groovy" classpathref="classpath"/>
+
+    <import file="../common/macros.xml" />
+
+    <target name="test-interactive" depends="
+		test-interactive-quits-with-exit, 
+		test-help-works-in-interactive-mode"/>
+		<!-- TODO Get these tests passing -->
+		<!-- test-commands-can-have-different-parameters, -->
+		<!-- test-different-scripts-can-be-called, -->
+		<!-- test-system-properties-and-environments-can-be-specified, -->
+		<!-- test-default-environments-are-used-for-special-scripts, -->
+		<!-- test-environment-can-be-specified-when-starting-interactive-and-can-be-overridden"/> -->
+
+    <target name="init-app">
+	    <property name="project.dir" value="target/scripts/test-interactive"/>
+        <delete dir="${project.dir}"/>
+        <mkdir dir="target/scripts" />
+        <grails command="create-app test-interactive" dir="target/scripts" />
+        <mkdir dir="${project.dir}/scripts"/>
+		<echo file="${project.dir}/scripts/CustomScript.groovy">target ('default': "Test Custom Script") { println "Custom-$${System.getProperty("grails.env")}-$${System.getProperty("fruit")}" }</echo> 
+	</target>
+
+    <target name="test-interactive-quits-with-exit">
+        <grails command="interactive" interactiveCommands="exit" resultId="int01" dir="target/scripts" expectedOutputRegex="Welcome to Grails" />
+    </target>
+
+    <target name="test-help-works-in-interactive-mode">
+        <grails command="interactive" interactiveCommands="help|exit" resultId="int02" dir="target/scripts" expectedOutputRegex="Available Targets \\(type grails help 'target-name' for more info\\)" />
+    </target>
+
+    <target name="test-commands-can-have-different-parameters" depends="init-app">
+        <grails command="interactive" interactiveCommands="create-unit-test One|create-unit-test Two|exit" resultId="int03" dir="${project.dir}" expectedOutputRegex="Created Tests for One.*Created Tests for Two" />
+    </target>
+
+    <target name="test-different-scripts-can-be-called" depends="init-app">
+        <grails command="interactive" interactiveCommands="create-unit-test One|test-app|exit" resultId="int04" dir="${project.dir}" expectedOutputRegex="Created Tests for One.*Tests passed" />
+    </target>
+
+    <target name="test-system-properties-and-environments-can-be-specified" depends="init-app">
+        <grails command="-Dfruit=banana interactive" interactiveCommands="custom-script|-Dfruit=orange prod custom-script|-Dgrails.env=test -Dfruit=pear custom-script|custom-script|exit" resultId="int05" dir="${project.dir}" expectedOutputRegex="Custom-development-banana.*Custom-production-orange.*Custom-test-pear.*Custom-development-banana" />
+    </target>
+
+    <target name="test-default-environments-are-used-for-special-scripts" depends="init-app">
+        <grails command="interactive" interactiveCommands="war|test-app|dev test-app|test-app|exit" resultId="int06" dir="${project.dir}" expectedOutputRegex="Environment set to production.*Environment set to test.*Environment set to development.*Environment set to test" />
+    </target>
+
+    <target name="test-environment-can-be-specified-when-starting-interactive-and-can-be-overridden" depends="init-app">
+        <grails command="dev interactive" interactiveCommands="war|test-app|test test-app|exit" resultId="int07" dir="${project.dir}" expectedOutputRegex="Environment set to development.*Environment set to development.*Environment set to test" />
+    </target>
+
+</project>
