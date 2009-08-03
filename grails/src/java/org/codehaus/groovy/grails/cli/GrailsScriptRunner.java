@@ -308,10 +308,10 @@ public class GrailsScriptRunner {
             }
 
             long now = System.currentTimeMillis();
-            callPluginOrGrailsScript(script.name);
+            int exitCode = executeCommand(script.name, script.args, script.env);
             long end = System.currentTimeMillis();
             out.println("--------------------------------------------------------");
-            out.println("Command [" + script.name + " completed in " + (end - now) + "ms");
+            out.println("Command [" + script.name + " completed in " + (end - now) + "ms with exit code " + exitCode);
         }
     }
 
